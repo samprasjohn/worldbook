@@ -1,0 +1,10 @@
+const express = require('express');
+const router = express.Router();
+const postController = require('../controllers/postcontroller');
+
+router.post('/upload', postController.uploadPost);
+router.post('/like/:id', postController.likePost);
+router.post('/comment/:id', postController.commentPost);
+router.get('/', postController.getPosts);
+
+module.exports = router;

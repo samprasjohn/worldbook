@@ -1,0 +1,27 @@
+const Post = require('./models/post');
+
+function setupSocket(io) {
+  io.on('connection', (socket) => {
+    console.log('New client connected');
+
+    socket.on('like', async (postId) => {
+      const post = await Post.findById(postId);
+      post.likes++;
+      await post.save();
+      io.emit('like', post);
+    });
+
+    socket.on('comment', async ({ postId, text }) => {
+      const post = await Post.findById(postId);
+      post.comments.push({ text });
+      await post.save();
+      io.emit('comment', post);
+    });
+
+    socket.on('disconnect', () => {
+      console.log('Client disconnected');
+    });
+  });
+}
+
+module.exports = { setupSocket };

@@ -1,0 +1,51 @@
+const Post = require('../models/post');
+const multer = require('multer');
+const path = require('path');
+
+//for file upload
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/');
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 5 * 1024 * 1024 } // to set limit as 5MB  
+}).single('image');
+
+exports.uploadPost = (req, res) => {
+  upload(req, res, async (err) => {
+    if (err) {
+      return res.status(400).send(err.message);
+    }
+    const newPost = new Post({
+      description: req.body.description,
+      imageUrl: `/uploads/${req.file.filename}`
+    });
+    await newPost.save();
+    res.status(201).json(newPost);
+  });
+};
+
+exports.likePost = async (req, res) => {
+  const post = await Post.findById(req.params.id);
+  post.likes++;
+  await post.save();
+  res.json(post);
+};
+
+exports.commentPost = async (req, res) => {
+  const post = await Post.findById(req.params.id);
+  post.comments.push({ text: req.body.text });
+  await post.save();
+  res.json(post);
+};
+
+exports.getPosts = async (req, res) => {
+  const posts = await Post.find();
+  res.json(posts);
+};
